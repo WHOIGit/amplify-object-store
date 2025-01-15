@@ -55,7 +55,7 @@ for key in store.keys():
 For better resource management, you can use the client as a context manager:
 
 ```python
-with RestStore(base_url='http://localhost:8000', api_key='your-api-key') as store:
+with RestStore.create(base_url='http://localhost:8000', api_key='your-api-key') as store:
     store.put('temp-key', b'temporary data')
     data = store.get('temp-key')
     # Connection is automatically closed after the context
@@ -66,7 +66,7 @@ with RestStore(base_url='http://localhost:8000', api_key='your-api-key') as stor
 When initializing the client, you can configure several parameters:
 
 ```python
-store = RestStore(
+store = RestStore.create(
     base_url='http://localhost:8000',
     api_key='your-api-key',
     timeout=30.0,        # Request timeout in seconds
@@ -116,3 +116,5 @@ pytest test.py
 - `DELETE /objects/{key}` - Delete an object
 - `GET /objects` - List objects (supports pagination and prefix filtering)
 
+Note that keys with special characters must be URL-encoded and decoded.
+This is handled automatically by the client and server-side implementations.
