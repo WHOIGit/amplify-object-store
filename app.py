@@ -6,8 +6,18 @@ import base64
 import time
 from datetime import datetime
 import json
+from contextlib import asynccontextmanager
 
-app = FastAPI(title="Object Store API")
+@asynccontextmanager
+async def lifespan(app):
+    # This is where you would initialize your object store
+    # Example:
+    from storage.object import DictStore
+    app.state.store = DictStore()
+    yield
+    # This is where you would clean up your object store if needed
+
+app = FastAPI(title="Object Store API", lifespan=lifespan)
 
 # Pydantic models for responses
 class ObjectMetadata(BaseModel):
@@ -207,14 +217,5 @@ async def http_exception_handler(request, exc):
         media_type="application/json"
     )
 
-from contextlib import asynccontextmanager
 
-@asynccontextmanager
-async def lifespan(app):
-    # This is where you would initialize your object store
-    # Example:
-    from storage.object import DictStore
-    app.state.store = DictStore()
-    yield
-    # This is where you would clean up your object store if needed
 
