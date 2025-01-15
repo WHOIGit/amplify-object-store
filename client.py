@@ -3,6 +3,7 @@ from typing import Iterable, Optional
 import requests
 from requests.exceptions import RequestException
 from storage.object import ObjectStore
+from storage.utils import UrlEncodingStore
 
 class RestStoreError(Exception):
     """Base exception for REST store errors"""
@@ -15,6 +16,18 @@ class RestStore(ObjectStore):
     This client implements the ObjectStore interface by making HTTP requests
     to a compatible REST API endpoint.
     """
+
+    @classmethod
+    def create(cls, *args, **kwargs) -> ObjectStore:
+        """
+        Factory method to create a URL-encoding enabled REST store.
+        
+        Takes the same arguments as the RestStore constructor.
+        Returns an ObjectStore instance that handles URL-encoded keys.
+        """
+        base_store = cls(*args, **kwargs)
+        return UrlEncodingStore(base_store)
+
     def __init__(
         self, 
         base_url: str, 

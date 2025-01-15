@@ -4,7 +4,7 @@ from client import RestStore
 @pytest.fixture
 def store():
     """Create a test RestStore instance"""
-    store = RestStore(
+    store = RestStore.create(
         base_url='http://localhost:8000',
         api_key='test-key'
     )
@@ -69,6 +69,15 @@ def test_binary_data(store):
     """Test storing and retrieving binary data"""
     key = 'test_binary'
     data = bytes([0, 1, 2, 3, 255, 254, 253, 252])
+    
+    store.put(key, data)
+    retrieved = store.get(key)
+    assert retrieved == data
+
+def test_special_characters_in_keys(store):
+    """Test keys with special characters"""
+    key = 'test_special/characters !@#$%^&*()_+'
+    data = b'Special characters'
     
     store.put(key, data)
     retrieved = store.get(key)

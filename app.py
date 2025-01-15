@@ -63,7 +63,7 @@ def decode_cursor(cursor: str) -> str:
     except:
         raise HTTPException(status_code=400, detail="Invalid cursor")
 
-@app.put("/objects/{key}")
+@app.put("/objects/{key:path}")
 async def put_object(
     key: str,
     request: Request,
@@ -87,7 +87,7 @@ async def put_object(
         created_at=datetime.utcnow()
     )
 
-@app.get("/objects/{key}")
+@app.get("/objects/{key:path}")
 async def get_object(
     key: str,
     request: Request,
@@ -108,7 +108,7 @@ async def get_object(
         media_type=request.headers.get("Accept", "application/octet-stream")
     )
 
-@app.head("/objects/{key}")
+@app.head("/objects/{key:path}")
 async def head_object(
     key: str,
     request: Request,
@@ -123,7 +123,7 @@ async def head_object(
     
     return Response(status_code=200)
 
-@app.delete("/objects/{key}")
+@app.delete("/objects/{key:path}")
 async def delete_object(
     key: str,
     request: Request,
