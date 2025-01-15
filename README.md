@@ -28,7 +28,7 @@ The `RestStore` client provides a simple interface for interacting with the obje
 from client import RestStore
 
 # Initialize the client
-store = RestStore(
+store = RestStore.create(
     base_url='http://localhost:8000',
     api_key='your-api-key'
 )
