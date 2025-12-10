@@ -1,6 +1,7 @@
 # auth_fastapi.py
 import asyncio
 import os
+import threading
 
 import hmac
 from datetime import datetime, timezone
@@ -23,13 +24,17 @@ _TOKENS_FILE_PATH: Path = Path(os.environ.get("AUTH_TOKENS_FILE", DEFAULT_TOKENS
 _TOKENS_CACHE: List[TokenRecord] = []
 _TOKENS_MTIME: Optional[float] = None
 _TOKENS_LOCK: Optional[asyncio.Lock] = None
+_LOCK_INIT_LOCK: threading.Lock = threading.Lock()
 
 
 def _get_lock() -> asyncio.Lock:
-    """Get or create the asyncio lock for thread-safe cache access."""
+    """Get or create the asyncio lock for coroutine-safe cache access."""
     global _TOKENS_LOCK
     if _TOKENS_LOCK is None:
-        _TOKENS_LOCK = asyncio.Lock()
+        with _LOCK_INIT_LOCK:
+            # Double-check locking pattern
+            if _TOKENS_LOCK is None:
+                _TOKENS_LOCK = asyncio.Lock()
     return _TOKENS_LOCK
 
 
