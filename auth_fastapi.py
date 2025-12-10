@@ -34,7 +34,13 @@ def _get_lock() -> asyncio.Lock:
         with _LOCK_INIT_LOCK:
             # Double-check locking pattern
             if _TOKENS_LOCK is None:
-                _TOKENS_LOCK = asyncio.Lock()
+                try:
+                    # Ensure we're in an async context with a running loop
+                    asyncio.get_running_loop()
+                    _TOKENS_LOCK = asyncio.Lock()
+                except RuntimeError:
+                    # No event loop running, create lock that will be bound to loop later
+                    _TOKENS_LOCK = asyncio.Lock()
     return _TOKENS_LOCK
 
 
@@ -54,14 +60,17 @@ async def _reload_tokens_if_changed() -> List[TokenRecord]:
 
     async with _get_lock():
         try:
-            mtime = _TOKENS_FILE_PATH.stat().st_mtime
+            # Use asyncio.to_thread for blocking I/O operation
+            mtime = await asyncio.to_thread(_TOKENS_FILE_PATH.stat)
+            mtime = mtime.st_mtime
         except FileNotFoundError:
             _TOKENS_CACHE = []
             _TOKENS_MTIME = None
             return _TOKENS_CACHE
 
         if _TOKENS_MTIME is None or mtime != _TOKENS_MTIME:
-            _TOKENS_CACHE = load_token_records(_TOKENS_FILE_PATH)
+            # Use asyncio.to_thread for blocking I/O operation
+            _TOKENS_CACHE = await asyncio.to_thread(load_token_records, _TOKENS_FILE_PATH)
             _TOKENS_MTIME = mtime
 
         return _TOKENS_CACHE
