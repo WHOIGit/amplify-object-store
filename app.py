@@ -8,6 +8,10 @@ from datetime import datetime
 import json
 from contextlib import asynccontextmanager
 
+
+from auth_fastapi import scoped_get, scoped_head, scoped_put, scoped_delete
+
+
 @asynccontextmanager
 async def lifespan(app):
     # This is where you would initialize your object store
@@ -33,13 +37,6 @@ class ListObjectsResponse(BaseModel):
 class ErrorResponse(BaseModel):
     error: dict
 
-def validate_api_key(api_key: str = Header(..., alias="Authorization")) -> str:
-    """Validate the API key from the Authorization header"""
-    if not api_key.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Invalid authorization header format")
-    token = api_key.split(" ")[1]
-    # TODO: Implement actual API key validation
-    return token
 
 def get_store(request: Request):
     """Helper to get the object store from app state"""
@@ -50,10 +47,12 @@ def get_store(request: Request):
         )
     return request.app.state.store
 
+
 def encode_cursor(last_key: str) -> str:
     """Create a base64 encoded cursor from the last key"""
     cursor_data = {"last_key": last_key}
     return base64.b64encode(json.dumps(cursor_data).encode()).decode()
+
 
 def decode_cursor(cursor: str) -> str:
     """Decode a cursor to get the last key"""
@@ -63,14 +62,13 @@ def decode_cursor(cursor: str) -> str:
     except:
         raise HTTPException(status_code=400, detail="Invalid cursor")
 
-@app.put("/objects/{key:path}")
+
+@scoped_put(app, "/objects/{key:path}", scopes=["write"])
 async def put_object(
     key: str,
     request: Request,
-    api_key: str = Header(..., alias="Authorization")
 ):
     """Store an object"""
-    validate_api_key(api_key)
     store = get_store(request)
     
     # Read request body
@@ -87,14 +85,13 @@ async def put_object(
         created_at=datetime.utcnow()
     )
 
-@app.get("/objects/{key:path}")
+
+@scoped_get(app, "/objects/{key:path}", scopes=["read"])
 async def get_object(
     key: str,
     request: Request,
-    api_key: str = Header(..., alias="Authorization")
 ):
     """Retrieve an object"""
-    validate_api_key(api_key)
     store = get_store(request)
     
     try:
@@ -108,14 +105,13 @@ async def get_object(
         media_type=request.headers.get("Accept", "application/octet-stream")
     )
 
-@app.head("/objects/{key:path}")
+
+@scoped_head(app, "/objects/{key:path}", scopes=["read"])
 async def head_object(
     key: str,
     request: Request,
-    api_key: str = Header(..., alias="Authorization")
 ):
     """Check if an object exists"""
-    validate_api_key(api_key)
     store = get_store(request)
     
     if not store.exists(key):
@@ -123,14 +119,13 @@ async def head_object(
     
     return Response(status_code=200)
 
-@app.delete("/objects/{key:path}")
+
+@scoped_delete(app, "/objects/{key:path}", scopes=["delete"])
 async def delete_object(
     key: str,
     request: Request,
-    api_key: str = Header(..., alias="Authorization")
 ):
     """Delete an object"""
-    validate_api_key(api_key)
     store = get_store(request)
     
     try:
@@ -140,16 +135,15 @@ async def delete_object(
     
     return Response(status_code=204)
 
-@app.get("/objects")
+
+@scoped_get(app, "/objects", scopes=["read"])
 async def list_objects(
     request: Request,
     prefix: Optional[str] = None,
     limit: int = 100,
     cursor: Optional[str] = None,
-    api_key: str = Header(..., alias="Authorization")
 ):
     """List objects with pagination"""
-    validate_api_key(api_key)
     store = get_store(request)
     
     try:
@@ -190,18 +184,6 @@ async def list_objects(
         has_more=has_more
     )
 
-# Example middleware for rate limiting
-@app.middleware("http")
-async def add_rate_limit_headers(request: Request, call_next):
-    """Add rate limit headers to responses"""
-    response = await call_next(request)
-    
-    # TODO: Implement actual rate limiting
-    response.headers["X-RateLimit-Limit"] = "1000"
-    response.headers["X-RateLimit-Remaining"] = "999"
-    response.headers["X-RateLimit-Reset"] = str(int(time.time() + 3600))
-    
-    return response
 
 # Error handling
 @app.exception_handler(HTTPException)
