@@ -1,5 +1,7 @@
 # auth_fastapi.py
+import asyncio
 import os
+import threading
 
 import hmac
 from datetime import datetime, timezone
@@ -21,36 +23,58 @@ security = HTTPBearer()
 _TOKENS_FILE_PATH: Path = Path(os.environ.get("AUTH_TOKENS_FILE", DEFAULT_TOKENS_FILE))
 _TOKENS_CACHE: List[TokenRecord] = []
 _TOKENS_MTIME: Optional[float] = None
+_TOKENS_LOCK: Optional[asyncio.Lock] = None
+_LOCK_INIT_LOCK: threading.Lock = threading.Lock()
 
 
-def set_tokens_file_path(path: Path) -> None:
+async def _get_lock() -> asyncio.Lock:
+    """Get or create the asyncio lock for coroutine-safe cache access."""
+    global _TOKENS_LOCK
+    if _TOKENS_LOCK is None:
+        with _LOCK_INIT_LOCK:
+            # Double-check locking pattern
+            if _TOKENS_LOCK is None:
+                # Ensure we're in an async context with a running loop
+                asyncio.get_running_loop()
+                _TOKENS_LOCK = asyncio.Lock()
+    return _TOKENS_LOCK
+
+
+async def set_tokens_file_path(path: Path) -> None:
     """
     Optionally override the tokens.json path used at runtime.
     Call this once at startup if needed.
     """
     global _TOKENS_FILE_PATH, _TOKENS_MTIME
-    _TOKENS_FILE_PATH = path
-    _TOKENS_MTIME = None
+    lock = await _get_lock()
+    async with lock:
+        _TOKENS_FILE_PATH = path
+        _TOKENS_MTIME = None
 
 
-def _reload_tokens_if_changed() -> List[TokenRecord]:
+async def _reload_tokens_if_changed() -> List[TokenRecord]:
     global _TOKENS_CACHE, _TOKENS_MTIME
 
-    try:
-        mtime = _TOKENS_FILE_PATH.stat().st_mtime
-    except FileNotFoundError:
-        _TOKENS_CACHE = []
-        _TOKENS_MTIME = None
+    lock = await _get_lock()
+    async with lock:
+        try:
+            # Use asyncio.to_thread for blocking I/O operation
+            stat_result = await asyncio.to_thread(_TOKENS_FILE_PATH.stat)
+            mtime = stat_result.st_mtime
+        except FileNotFoundError:
+            _TOKENS_CACHE = []
+            _TOKENS_MTIME = None
+            return _TOKENS_CACHE
+
+        if _TOKENS_MTIME is None or mtime != _TOKENS_MTIME:
+            # Use asyncio.to_thread for blocking I/O operation
+            _TOKENS_CACHE = await asyncio.to_thread(load_token_records, _TOKENS_FILE_PATH)
+            _TOKENS_MTIME = mtime
+
         return _TOKENS_CACHE
 
-    if _TOKENS_MTIME is None or mtime != _TOKENS_MTIME:
-        _TOKENS_CACHE = load_token_records(_TOKENS_FILE_PATH)
-        _TOKENS_MTIME = mtime
 
-    return _TOKENS_CACHE
-
-
-def get_current_token(
+async def get_current_token(
     credentials: HTTPAuthorizationCredentials = Depends(security),
 ) -> TokenRecord:
     """
@@ -59,7 +83,7 @@ def get_current_token(
     """
     token = credentials.credentials
     token_hash = hash_token(token)
-    records = _reload_tokens_if_changed()
+    records = await _reload_tokens_if_changed()
 
     now = datetime.now(timezone.utc)
     for rec in records:
