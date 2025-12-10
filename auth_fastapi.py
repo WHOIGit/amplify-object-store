@@ -27,7 +27,7 @@ _TOKENS_LOCK: Optional[asyncio.Lock] = None
 _LOCK_INIT_LOCK: threading.Lock = threading.Lock()
 
 
-def _get_lock() -> asyncio.Lock:
+async def _get_lock() -> asyncio.Lock:
     """Get or create the asyncio lock for coroutine-safe cache access."""
     global _TOKENS_LOCK
     if _TOKENS_LOCK is None:
@@ -46,7 +46,8 @@ async def set_tokens_file_path(path: Path) -> None:
     Call this once at startup if needed.
     """
     global _TOKENS_FILE_PATH, _TOKENS_MTIME
-    async with _get_lock():
+    lock = await _get_lock()
+    async with lock:
         _TOKENS_FILE_PATH = path
         _TOKENS_MTIME = None
 
@@ -54,7 +55,8 @@ async def set_tokens_file_path(path: Path) -> None:
 async def _reload_tokens_if_changed() -> List[TokenRecord]:
     global _TOKENS_CACHE, _TOKENS_MTIME
 
-    async with _get_lock():
+    lock = await _get_lock()
+    async with lock:
         try:
             # Use asyncio.to_thread for blocking I/O operation
             stat_result = await asyncio.to_thread(_TOKENS_FILE_PATH.stat)
