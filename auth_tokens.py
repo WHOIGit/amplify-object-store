@@ -151,8 +151,6 @@ def cmd_delete(name: str, file: Path) -> int:
 
 
 def cmd_refresh(name: str, ttl_days: int, scopes: Optional[List[str]], file: Path) -> int:
-    from datetime import datetime, timedelta, timezone
-
     records = load_token_records(file)
     rec = find_record_by_name(records, name)
 
