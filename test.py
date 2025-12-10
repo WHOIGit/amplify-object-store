@@ -1,4 +1,6 @@
+import os
 import pytest
+
 from client import RestStore
 
 @pytest.fixture
@@ -6,7 +8,7 @@ def store():
     """Create a test RestStore instance"""
     store = RestStore.create(
         base_url='http://localhost:8000',
-        api_key='test-key'
+        api_key=os.environ.get('TEST_API_KEY', 'test_api_key')
     )
     yield store
     # Clean up any test data

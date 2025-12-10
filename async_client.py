@@ -1,11 +1,8 @@
 import asyncio
-from typing import AsyncIterator, Iterable, Optional
+from typing import AsyncIterator, Optional
 
 import aiohttp
 from aiohttp import ClientError
-
-from storage.object import ObjectStore
-from storage.utils import UrlEncodingStore
 
 
 class AsyncRestStoreError(Exception):
@@ -13,23 +10,22 @@ class AsyncRestStoreError(Exception):
     pass
 
 
-class AsyncRestStore(ObjectStore):
+class AsyncRestStore:
     """
-    Async REST client implementation of ObjectStore interface.
+    Async REST client.
 
     Mirrors RestStore in client.py but uses aiohttp and async/await.
     """
 
     @classmethod
-    def create(cls, *args, **kwargs) -> ObjectStore:
+    def create(cls, *args, **kwargs) -> "AsyncRestStore":
         """
-        Factory method to create a URL-encoding enabled async REST store.
+        Factory method to create an async REST store.
 
-        Takes the same arguments as the AsyncRestStore constructor.
-        Returns an ObjectStore instance that handles URL-encoded keys.
+        For the async client we return the raw AsyncRestStore instance to avoid
+        wrapping it in any synchronous adapter.
         """
-        base_store = cls(*args, **kwargs)
-        return UrlEncodingStore(base_store)
+        return cls(*args, **kwargs)
 
     def __init__(
         self,
@@ -80,11 +76,19 @@ class AsyncRestStore(ObjectStore):
     # --------------------------------------------------------------------- #
     # Internal request helper with retries
     # --------------------------------------------------------------------- #
-    async def _make_request(self, method: str, path: str, **kwargs) -> aiohttp.ClientResponse:
+    async def _make_request(
+        self,
+        method: str,
+        path: str,
+        *,
+        allow_404: bool = False,
+        **kwargs,
+    ) -> aiohttp.ClientResponse:
         """
         Make an HTTP request with retry logic (async).
 
-        Mirrors RestStore._make_request but uses aiohttp and asyncio.sleep.
+        If allow_404 is True, a 404 response is returned to the caller
+        instead of being turned into AsyncRestStoreError.
         """
         url = f"{self.base_url}/{path.lstrip('/')}"
         kwargs.setdefault("timeout", self.timeout)
@@ -111,6 +115,10 @@ class AsyncRestStore(ObjectStore):
 
                 # Handle error status codes
                 if resp.status >= 400:
+                    if allow_404 and resp.status == 404:
+                        # Caller is responsible for handling 404
+                        return resp
+
                     # Try to read JSON error, but don't fail if it isn't JSON
                     try:
                         data = await resp.json()
@@ -173,7 +181,15 @@ class AsyncRestStore(ObjectStore):
     async def delete(self, key: str) -> None:
         """Delete an object (async)."""
         try:
-            resp = await self._make_request("DELETE", f"objects/{key}")
+            # Allow 404 through so we can turn it into KeyError explicitly
+            resp = await self._make_request(
+                "DELETE",
+                f"objects/{key}",
+                allow_404=True,
+            )
+            if resp.status == 404:
+                await resp.release()
+                raise KeyError(f"Object {key} does not exist")
             await resp.release()
         except AsyncRestStoreError as e:
             raise KeyError(f"Failed to delete object {key}: {str(e)}")
