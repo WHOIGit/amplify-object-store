@@ -49,11 +49,11 @@ def _reload_tokens_if_changed() -> List[TokenRecord]:
         try:
             _TOKENS_CACHE = load_token_records(_TOKENS_FILE_PATH)
             _TOKENS_MTIME = mtime
-        except Exception as e:
+        except ValueError as e:
             logger.error(f"Failed to load token records from {_TOKENS_FILE_PATH}: {e}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Authentication service unavailable: unable to load token configuration",
+                detail="Authentication service unavailable: token configuration is invalid",
             )
 
     return _TOKENS_CACHE
