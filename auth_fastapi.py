@@ -1,4 +1,5 @@
 # auth_fastapi.py
+import asyncio
 import os
 
 import hmac
@@ -21,36 +22,39 @@ security = HTTPBearer()
 _TOKENS_FILE_PATH: Path = Path(os.environ.get("AUTH_TOKENS_FILE", DEFAULT_TOKENS_FILE))
 _TOKENS_CACHE: List[TokenRecord] = []
 _TOKENS_MTIME: Optional[float] = None
+_TOKENS_LOCK: asyncio.Lock = asyncio.Lock()
 
 
-def set_tokens_file_path(path: Path) -> None:
+async def set_tokens_file_path(path: Path) -> None:
     """
     Optionally override the tokens.json path used at runtime.
     Call this once at startup if needed.
     """
     global _TOKENS_FILE_PATH, _TOKENS_MTIME
-    _TOKENS_FILE_PATH = path
-    _TOKENS_MTIME = None
+    async with _TOKENS_LOCK:
+        _TOKENS_FILE_PATH = path
+        _TOKENS_MTIME = None
 
 
-def _reload_tokens_if_changed() -> List[TokenRecord]:
+async def _reload_tokens_if_changed() -> List[TokenRecord]:
     global _TOKENS_CACHE, _TOKENS_MTIME
 
-    try:
-        mtime = _TOKENS_FILE_PATH.stat().st_mtime
-    except FileNotFoundError:
-        _TOKENS_CACHE = []
-        _TOKENS_MTIME = None
+    async with _TOKENS_LOCK:
+        try:
+            mtime = _TOKENS_FILE_PATH.stat().st_mtime
+        except FileNotFoundError:
+            _TOKENS_CACHE = []
+            _TOKENS_MTIME = None
+            return _TOKENS_CACHE
+
+        if _TOKENS_MTIME is None or mtime != _TOKENS_MTIME:
+            _TOKENS_CACHE = load_token_records(_TOKENS_FILE_PATH)
+            _TOKENS_MTIME = mtime
+
         return _TOKENS_CACHE
 
-    if _TOKENS_MTIME is None or mtime != _TOKENS_MTIME:
-        _TOKENS_CACHE = load_token_records(_TOKENS_FILE_PATH)
-        _TOKENS_MTIME = mtime
 
-    return _TOKENS_CACHE
-
-
-def get_current_token(
+async def get_current_token(
     credentials: HTTPAuthorizationCredentials = Depends(security),
 ) -> TokenRecord:
     """
@@ -59,7 +63,7 @@ def get_current_token(
     """
     token = credentials.credentials
     token_hash = hash_token(token)
-    records = _reload_tokens_if_changed()
+    records = await _reload_tokens_if_changed()
 
     now = datetime.now(timezone.utc)
     for rec in records:
