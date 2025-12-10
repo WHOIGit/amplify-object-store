@@ -22,7 +22,15 @@ security = HTTPBearer()
 _TOKENS_FILE_PATH: Path = Path(os.environ.get("AUTH_TOKENS_FILE", DEFAULT_TOKENS_FILE))
 _TOKENS_CACHE: List[TokenRecord] = []
 _TOKENS_MTIME: Optional[float] = None
-_TOKENS_LOCK: asyncio.Lock = asyncio.Lock()
+_TOKENS_LOCK: Optional[asyncio.Lock] = None
+
+
+def _get_lock() -> asyncio.Lock:
+    """Get or create the asyncio lock for thread-safe cache access."""
+    global _TOKENS_LOCK
+    if _TOKENS_LOCK is None:
+        _TOKENS_LOCK = asyncio.Lock()
+    return _TOKENS_LOCK
 
 
 async def set_tokens_file_path(path: Path) -> None:
@@ -31,7 +39,7 @@ async def set_tokens_file_path(path: Path) -> None:
     Call this once at startup if needed.
     """
     global _TOKENS_FILE_PATH, _TOKENS_MTIME
-    async with _TOKENS_LOCK:
+    async with _get_lock():
         _TOKENS_FILE_PATH = path
         _TOKENS_MTIME = None
 
@@ -39,7 +47,7 @@ async def set_tokens_file_path(path: Path) -> None:
 async def _reload_tokens_if_changed() -> List[TokenRecord]:
     global _TOKENS_CACHE, _TOKENS_MTIME
 
-    async with _TOKENS_LOCK:
+    async with _get_lock():
         try:
             mtime = _TOKENS_FILE_PATH.stat().st_mtime
         except FileNotFoundError:
