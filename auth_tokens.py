@@ -66,7 +66,11 @@ class TokenRecord:
 def load_token_records(path: Path) -> List[TokenRecord]:
     if not path.exists():
         return []
-    data = json.loads(path.read_text())
+    try:
+        data = json.loads(path.read_text())
+    except json.JSONDecodeError as e:
+        print(f"Error: Token file '{path}' is corrupted or contains invalid JSON: {e}", file=sys.stderr)
+        sys.exit(1)
     return [TokenRecord.from_dict(item) for item in data]
 
 
