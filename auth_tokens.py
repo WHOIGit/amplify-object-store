@@ -68,10 +68,15 @@ def load_token_records(path: Path) -> List[TokenRecord]:
         return []
     try:
         data = json.loads(path.read_text())
-        return [TokenRecord.from_dict(item) for item in data]
     except json.JSONDecodeError as e:
         raise ValueError(f"Token file '{path}' is corrupted or contains invalid JSON: {e}")
-    except (KeyError, TypeError, ValueError) as e:
+    
+    try:
+        return [TokenRecord.from_dict(item) for item in data]
+    except (KeyError, TypeError) as e:
+        raise ValueError(f"Token file '{path}' contains invalid token data: missing or invalid field: {e}")
+    except ValueError as e:
+        # ValueError from datetime.fromisoformat() or other parsing
         raise ValueError(f"Token file '{path}' contains invalid token data: {e}")
 
 
