@@ -98,7 +98,6 @@ def hash_token(token: str) -> str:
 # --- CLI actions ---
 
 def cmd_add(name: str, ttl_days: int, scopes: List[str], file: Path) -> int:
-    from datetime import datetime, timedelta, timezone
 
     records = load_token_records(file)
 
