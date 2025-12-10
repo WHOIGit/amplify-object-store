@@ -1,4 +1,5 @@
 # auth_fastapi.py
+import logging
 import os
 
 import hmac
@@ -17,6 +18,7 @@ from auth_tokens import (
 )
 
 security = HTTPBearer()
+logger = logging.getLogger(__name__)
 
 _TOKENS_FILE_PATH: Path = Path(os.environ.get("AUTH_TOKENS_FILE", DEFAULT_TOKENS_FILE))
 _TOKENS_CACHE: List[TokenRecord] = []
@@ -44,8 +46,15 @@ def _reload_tokens_if_changed() -> List[TokenRecord]:
         return _TOKENS_CACHE
 
     if _TOKENS_MTIME is None or mtime != _TOKENS_MTIME:
-        _TOKENS_CACHE = load_token_records(_TOKENS_FILE_PATH)
-        _TOKENS_MTIME = mtime
+        try:
+            _TOKENS_CACHE = load_token_records(_TOKENS_FILE_PATH)
+            _TOKENS_MTIME = mtime
+        except Exception as e:
+            logger.error(f"Failed to load token records from {_TOKENS_FILE_PATH}: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Authentication service unavailable: unable to load token configuration",
+            )
 
     return _TOKENS_CACHE
 

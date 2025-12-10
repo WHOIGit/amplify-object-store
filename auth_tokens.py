@@ -6,7 +6,7 @@ import json
 import secrets
 import sys
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import List, Optional
 
@@ -69,8 +69,7 @@ def load_token_records(path: Path) -> List[TokenRecord]:
     try:
         data = json.loads(path.read_text())
     except json.JSONDecodeError as e:
-        print(f"Error: Token file '{path}' is corrupted or contains invalid JSON: {e}", file=sys.stderr)
-        sys.exit(1)
+        raise ValueError(f"Token file '{path}' is corrupted or contains invalid JSON: {e}")
     return [TokenRecord.from_dict(item) for item in data]
 
 
@@ -103,7 +102,11 @@ def hash_token(token: str) -> str:
 
 def cmd_add(name: str, ttl_days: int, scopes: List[str], file: Path) -> int:
 
-    records = load_token_records(file)
+    try:
+        records = load_token_records(file)
+    except ValueError as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        return 1
 
     if find_record_by_name(records, name) is not None:
         print(f"ERROR: A token with name '{name}' already exists.", file=sys.stderr)
@@ -137,7 +140,11 @@ def cmd_add(name: str, ttl_days: int, scopes: List[str], file: Path) -> int:
 
 
 def cmd_delete(name: str, file: Path) -> int:
-    records = load_token_records(file)
+    try:
+        records = load_token_records(file)
+    except ValueError as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        return 1
     before = len(records)
     records = [rec for rec in records if rec.name != name]
 
@@ -151,7 +158,11 @@ def cmd_delete(name: str, file: Path) -> int:
 
 
 def cmd_refresh(name: str, ttl_days: int, scopes: Optional[List[str]], file: Path) -> int:
-    records = load_token_records(file)
+    try:
+        records = load_token_records(file)
+    except ValueError as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        return 1
     rec = find_record_by_name(records, name)
 
     if rec is None:
