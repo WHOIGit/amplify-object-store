@@ -4,7 +4,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import base64
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 from contextlib import asynccontextmanager
 
@@ -82,7 +82,7 @@ async def put_object(
     return ObjectMetadata(
         key=key,
         size=len(data),
-        created_at=datetime.utcnow()
+        created_at=datetime.now(timezone.utc)
     )
 
 
