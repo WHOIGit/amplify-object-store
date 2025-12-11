@@ -192,7 +192,7 @@ class AsyncRestStore:
                 raise KeyError(f"Object {key} does not exist")
             await resp.release()
         except AsyncRestStoreError as e:
-            raise KeyError(f"Failed to delete object {key}: {str(e)}")
+            raise AsyncRestStoreError(f"Failed to delete object {key}: {str(e)}")
 
     async def keys(self) -> AsyncIterator[str]:
         """List all object keys with pagination (async iterator)."""
