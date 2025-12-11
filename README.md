@@ -15,7 +15,7 @@ A simple object storage system with a FastAPI backend and Python client. The sys
 ## Installation
 
 ```bash
-pip install -r requirements.txt
+pip install .[deploy]
 ```
 
 ## Quick Start Guide
@@ -97,15 +97,34 @@ except NotImplementedError as e:
 Start the FastAPI server using uvicorn:
 
 ```bash
-uvicorn app:app --host 0.0.0.0 --port 8000
+uvicorn objectstore.app:app --host 0.0.0.0 --port 8000
 ```
 
 ## Running Tests
 
-The project includes a comprehensive test suite:
+The project includes a comprehensive test suite. To use it, make sure you install the "test" optional dependencies
+
+You will need a running service to test against (see above) and a token with read, write, and delete scopes.
+
+You can create the token as follows:
 
 ```bash
-pytest test.py
+python -m objectstore.auth_tokens add my-token --ttl 30 --scope read --scope write --scope delete
+```
+
+This will print a token, which you should then set as the value of the `TEST_API_TOKEN` environment variable:
+
+```bash
+export TEST_API_TOKEN={your token here}
+```
+
+By default, token metadata is stored in `tokens.json`, which is where the server expects to find it.
+
+Then run tests:
+
+```bash
+python tests/test.py
+python tests/async_test.py
 ```
 
 ## API Endpoints

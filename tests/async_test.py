@@ -1,14 +1,10 @@
 import os
 import pytest
-import pytest_asyncio
 
-# Configure pytest-asyncio to use module-level event loop for async fixtures
-pytestmark = pytest.mark.asyncio
-pytest_asyncio.plugin.asyncio_default_fixture_loop_scope = "module"
+from objectstore.async_client import AsyncRestStore
 
-from async_client import AsyncRestStore
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def async_store():
     """Create a test AsyncRestStore instance"""
     store = AsyncRestStore.create(
