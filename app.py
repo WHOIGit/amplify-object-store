@@ -12,12 +12,37 @@ from contextlib import asynccontextmanager
 from auth_fastapi import scoped_get, scoped_head, scoped_put, scoped_delete
 
 
+class AsyncDictStore:
+    """A simple in-memory async object store for demonstration purposes."""
+    def __init__(self):
+        self.store = {}
+
+    async def put(self, key: str, data: bytes) -> None:
+        self.store[key] = data
+
+    async def get(self, key: str) -> bytes:
+        if key not in self.store:
+            raise KeyError(f"Object {key} not found")
+        return self.store[key]
+
+    async def exists(self, key: str) -> bool:
+        return key in self.store
+
+    async def delete(self, key: str) -> None:
+        if key not in self.store:
+            raise KeyError(f"Object {key} not found")
+        del self.store[key]
+
+    async def keys(self):
+        for key in self.store.keys():
+            yield key
+
+
 @asynccontextmanager
 async def lifespan(app):
     # This is where you would initialize your object store
     # Example:
-    from storage.object import DictStore
-    app.state.store = DictStore()
+    app.state.store = AsyncDictStore()
     yield
     # This is where you would clean up your object store if needed
 
@@ -75,7 +100,7 @@ async def put_object(
     data = await request.body()
     
     try:
-        store.put(key, data)
+        await store.put(key, data)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -95,7 +120,7 @@ async def get_object(
     store = get_store(request)
     
     try:
-        data = store.get(key)
+        data = await store.get(key)
     except KeyError:
         raise HTTPException(status_code=404, detail=f"Object {key} not found")
     
@@ -114,7 +139,7 @@ async def head_object(
     """Check if an object exists"""
     store = get_store(request)
     
-    if not store.exists(key):
+    if not await store.exists(key):
         raise HTTPException(status_code=404)
     
     return Response(status_code=200)
@@ -129,7 +154,7 @@ async def delete_object(
     store = get_store(request)
     
     try:
-        store.delete(key)
+        await store.delete(key)
     except KeyError:
         raise HTTPException(status_code=404, detail=f"Object {key} not found")
     
@@ -148,7 +173,7 @@ async def list_objects(
     
     try:
         # Get all keys and sort them for consistent pagination
-        all_keys = sorted(store.keys())
+        all_keys = sorted([key async for key in store.keys()])
     except NotImplementedError:
         raise HTTPException(
             status_code=501,
