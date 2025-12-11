@@ -172,11 +172,14 @@ class AsyncRestStore:
     async def exists(self, key: str) -> bool:
         """Check if an object exists (async)."""
         try:
-            resp = await self._make_request("HEAD", f"objects/{key}")
+            resp = await self._make_request("HEAD", f"objects/{key}", allow_404=True)
+            if resp.status == 404:
+                await resp.release()
+                return False
             await resp.release()
             return True
-        except (AsyncRestStoreError, KeyError):
-            return False
+        except:
+            raise
 
     async def delete(self, key: str) -> None:
         """Delete an object (async)."""

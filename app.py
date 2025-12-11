@@ -42,7 +42,6 @@ class AsyncDictStore:
 async def lifespan(app):
     # This is where you would initialize your object store
     # Example:
-    from storage.object import DictStore
     app.state.store = AsyncDictStore()
     yield
     # This is where you would clean up your object store if needed
