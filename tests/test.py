@@ -1,7 +1,7 @@
 import os
 import pytest
 
-from client import RestStore
+from objectstore.client import RestStore
 
 @pytest.fixture
 def store():

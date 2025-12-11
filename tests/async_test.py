@@ -6,7 +6,7 @@ import pytest_asyncio
 pytestmark = pytest.mark.asyncio
 pytest_asyncio.plugin.asyncio_default_fixture_loop_scope = "module"
 
-from async_client import AsyncRestStore
+from objectstore.async_client import AsyncRestStore
 
 @pytest_asyncio.fixture
 async def async_store():

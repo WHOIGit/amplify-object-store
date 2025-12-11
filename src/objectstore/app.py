@@ -9,7 +9,7 @@ import json
 from contextlib import asynccontextmanager
 
 
-from auth_fastapi import scoped_get, scoped_head, scoped_put, scoped_delete
+from .auth_fastapi import scoped_get, scoped_head, scoped_put, scoped_delete
 
 
 class AsyncDictStore:
