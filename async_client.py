@@ -91,7 +91,7 @@ class AsyncRestStore:
         instead of being turned into AsyncRestStoreError.
         """
         url = f"{self.base_url}/{path.lstrip('/')}"
-        kwargs.setdefault("timeout", self.timeout)
+        kwargs.setdefault("timeout", aiohttp.ClientTimeout(total=self.timeout))
 
         last_error: Optional[BaseException] = None
         delay = self.retry_delay
