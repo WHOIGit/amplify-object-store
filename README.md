@@ -15,7 +15,7 @@ A simple object storage system with a FastAPI backend and Python client. The sys
 ## Installation
 
 ```bash
-pip install -r requirements.txt
+pip install .[deploy]
 ```
 
 ## Quick Start Guide
@@ -97,15 +97,18 @@ except NotImplementedError as e:
 Start the FastAPI server using uvicorn:
 
 ```bash
-uvicorn app:app --host 0.0.0.0 --port 8000
+uvicorn objectstore.app:app --host 0.0.0.0 --port 8000
 ```
 
 ## Running Tests
 
-The project includes a comprehensive test suite:
+The project includes a comprehensive test suite. To use it, make sure you install the "test" optional dependencies
+
+You will need a running service to test against.
 
 ```bash
-pytest test.py
+python tests/test.py
+python tests/async_test.py
 ```
 
 ## API Endpoints
