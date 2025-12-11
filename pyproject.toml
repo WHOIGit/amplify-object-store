@@ -15,17 +15,17 @@ classifiers = [
 ]
 keywords = ['storage']
 dependencies = [
-    "fastapi", 
-    "requests", 
+    "fastapi>=0.124.2", 
+    "requests>=2.32.5", 
     "amplify-storage-utils @ git+https://github.com/WHOIGit/amplify-storage-utils@v1.2.0"
 ]
 [project.optional-dependencies]
 test = [
-  "pytest>=8.0",
-  "pytest-asyncio",
+  "pytest>=9.0.2",
+  "pytest-asyncio>=1.3.0",
 ]
 deploy = [
-  "uvicorn",
+  "uvicorn>=0.38.0",
 ]
 
 [tool.hatch.metadata]
