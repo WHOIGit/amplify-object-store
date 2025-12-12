@@ -48,6 +48,20 @@ async def lifespan(app):
 
 app = FastAPI(title="Object Store API", lifespan=lifespan)
 
+
+@app.get("/health", tags=["Health"])
+async def health_check():
+    """
+    Health check endpoint for container orchestration.
+    Returns service status without requiring authentication.
+    """
+    return {
+        "status": "healthy",
+        "service": "amplify-object-store",
+        "version": "0.1.0"
+    }
+
+
 # Pydantic models for responses
 class ObjectMetadata(BaseModel):
     key: str

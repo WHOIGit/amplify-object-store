@@ -100,6 +100,28 @@ Start the FastAPI server using uvicorn:
 uvicorn objectstore.app:app --host 0.0.0.0 --port 8000
 ```
 
+## Docker Deployment
+
+### Prerequisites
+
+1. Docker and Docker Compose installed
+2. A `tokens.json` file with API tokens (see Token Management section below)
+3. Optional: A `.env` file for custom configuration (see Configuration section below)
+
+### Build and Run with Docker Compose
+
+```bash
+# Optional: Create .env file for custom configuration
+cp dotenv.template .env
+# Edit .env to customize ports, workers, etc.
+
+# Build the image
+docker compose build
+
+# Start the service
+docker compose up -d
+```
+
 ## Running Tests
 
 The project includes a comprehensive test suite. To use it, make sure you install the "test" optional dependencies
