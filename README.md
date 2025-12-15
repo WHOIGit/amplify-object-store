@@ -146,10 +146,10 @@ You can create the token as follows:
 python -m objectstore.auth_tokens add my-token --ttl 30 --scope read --scope write --scope delete
 ```
 
-This will print a token, which you should then set as the value of the `TEST_API_TOKEN` environment variable:
+This will print a token, which you should then set as the value of the `TEST_API_KEY` environment variable:
 
 ```bash
-export TEST_API_TOKEN={your token here}
+export TEST_API_KEY={your token here}
 ```
 
 By default, token metadata is stored in `tokens.json`, which is where the server expects to find it.
