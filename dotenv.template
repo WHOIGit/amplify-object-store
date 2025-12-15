@@ -21,11 +21,12 @@ TOKENS_FILE=./tokens.json
 # ============================================================================
 
 # Path to storage config YAML on the host (optional)
-# Leave empty or comment out to use in-memory store (demo mode)
+# To enable: uncomment this line AND the STORAGE_CONFIG volume mount in docker-compose.yml
 # STORAGE_CONFIG=./storage.yaml
 
 # Name of store to use from config (if multiple stores defined)
 # STORAGE_NAME=filesystem
 
-# Path to data directory for filesystem-based stores
-STORAGE_PATH=./data
+# Path to data directory for filesystem-based stores (host side)
+# To enable: uncomment this line AND the HOST_STORAGE_PATH volume mount in docker-compose.yml
+# HOST_STORAGE_PATH=./data

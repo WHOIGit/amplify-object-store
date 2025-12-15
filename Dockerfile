@@ -3,7 +3,7 @@ FROM python:3.12-slim
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    AUTH_TOKENS_FILE=/data/tokens.json \
+    AUTH_TOKENS_FILE=/app/tokens.json \
     HOST=0.0.0.0 \
     PORT=8000 \
     WORKERS=1 \
@@ -19,8 +19,7 @@ RUN apt-get update && \
 WORKDIR /app
 
 # Copy dependency files and source code
-COPY pyproject.toml README.md ./
-COPY src/ ./src/
+COPY pyproject.toml README.md src/ ./
 
 # Install the package with deploy extras
 RUN pip install --no-cache-dir .[deploy]
@@ -28,9 +27,6 @@ RUN pip install --no-cache-dir .[deploy]
 # Remove git now that dependencies are installed
 RUN apt-get purge -y --auto-remove git && \
     rm -rf /var/lib/apt/lists/*
-
-# Create data directory
-RUN mkdir -p /data
 
 # Expose port
 EXPOSE 8000

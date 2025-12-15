@@ -12,4 +12,4 @@ stores:
   filesystem:
     type: AsyncFilesystemStore
     config:
-      base_path: ${STORAGE_PATH:-/data/objects}
+      root_path: /data/objects

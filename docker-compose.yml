@@ -14,24 +14,23 @@ services:
     env_file:
       - .env
 
-    # Environment variables (these override .env)
+    # Container environment variables (these override .env)
     environment:
-      - PORT=8000
-      - WORKERS=1
-      - LOG_LEVEL=info
-      - AUTH_TOKENS_FILE=/app/tokens.json
       # Storage configuration (set in .env to enable)
+      # NOTE: Uncomment STORAGE_CONFIG volume mount below in this file to enable.
       - STORAGE_CONFIG=${STORAGE_CONFIG:+/app/storage.yaml}
       - STORAGE_NAME=${STORAGE_NAME}
 
     # Volume mounts
     volumes:
-      # Tokens
+      # Required: Authentication tokens
       - ${TOKENS_FILE:-./tokens.json}:/app/tokens.json:ro
-      # Storage config (mounted if STORAGE_CONFIG is set in .env)
-      - ${STORAGE_CONFIG:-/dev/null}:/app/storage.yaml:ro
-      # Storage data (for filesystem-based stores)
-      - ${STORAGE_PATH:-./data}:/data/objects
+
+      # Optional: Uncomment for YAML-based storage config (S3, etc.)
+      # - ${STORAGE_CONFIG}:/app/storage.yaml:ro
+
+      # Optional: Uncomment for filesystem-based storage
+      # - ${HOST_STORAGE_PATH}:/data/objects
 
     # Restart policy
     restart: unless-stopped

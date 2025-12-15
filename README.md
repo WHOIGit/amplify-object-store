@@ -134,6 +134,30 @@ docker compose up -d
 
 **Port configuration:** Set `HOST_PORT` in `.env` file (copy from `dotenv.template`)
 
+## Environment Variables
+
+Environment variables can be configured in the `.env` file (copy from `dotenv.template`).
+
+### External Variables (Host-side)
+
+These configure host paths and ports:
+
+- `HOST_PORT` - Port to expose on the host machine (default: 8000)
+- `TOKENS_FILE` - Path to tokens.json file on the host (default: ./tokens.json)
+- `STORAGE_CONFIG` - Path to storage.yaml config file on the host (optional, uncomment volume mount in docker-compose.yml)
+- `HOST_STORAGE_PATH` - Path to data directory on the host for filesystem storage (optional, uncomment volume mount in docker-compose.yml)
+
+### Internal Variables (Container-side)
+
+These control application behavior inside the container (defaults set in Dockerfile, can be overridden in .env):
+
+- `PORT` - Internal container port (default: 8000)
+- `HOST` - Bind address inside container (default: 0.0.0.0)
+- `WORKERS` - Number of uvicorn workers (default: 1)
+- `LOG_LEVEL` - Logging level: debug, info, warning, error (default: info)
+- `AUTH_TOKENS_FILE` - Path to tokens file inside container (default: /app/tokens.json)
+- `STORAGE_NAME` - Name of storage backend from config when multiple stores are defined (optional)
+
 ## Running Tests
 
 The project includes a comprehensive test suite. To use it, make sure you install the "test" optional dependencies
