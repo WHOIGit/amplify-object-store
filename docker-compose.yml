@@ -3,19 +3,19 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: ${IMAGE_NAME:-amplify-object-store}:${IMAGE_TAG:-latest}
-    container_name: ${CONTAINER_NAME:-amplify-object-store}
+    image: amplify-object-store:latest
+    container_name: amplify-object-store
 
     # Port mapping
     ports:
-      - "${HOST_PORT:-8000}:${CONTAINER_PORT:-8000}"
+      - "${HOST_PORT:-8000}:8000"
 
     # Environment variables
     environment:
-      - PORT=${CONTAINER_PORT:-8000}
-      - WORKERS=${WORKERS:-1}
-      - LOG_LEVEL=${LOG_LEVEL:-info}
-      - AUTH_TOKENS_FILE=${AUTH_TOKENS_FILE:-/data/tokens.json}
+      - PORT=8000
+      - WORKERS=1
+      - LOG_LEVEL=info
+      - AUTH_TOKENS_FILE=/data/tokens.json
 
     # Volume mounts
     volumes:
@@ -23,12 +23,12 @@ services:
       # IMPORTANT: Create tokens.json on host before running
       - ${TOKENS_FILE:-./tokens.json}:/data/tokens.json:ro
 
-    # Restart policy for production
-    restart: ${RESTART_POLICY:-unless-stopped}
+    # Restart policy
+    restart: unless-stopped
 
     # Health check
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:${CONTAINER_PORT:-8000}/health').read()"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read()"]
       interval: 30s
       timeout: 5s
       retries: 3

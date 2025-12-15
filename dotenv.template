@@ -1,0 +1,17 @@
+# Docker Compose Configuration Template
+# Copy this file to .env and adjust values as needed:
+#   cp dotenv.template .env
+
+# ============================================================================
+# Server Configuration
+# ============================================================================
+
+# Port to expose on the host machine
+HOST_PORT=8000
+
+# ============================================================================
+# Authentication
+# ============================================================================
+
+# Path to tokens.json file on the host
+TOKENS_FILE=./tokens.json
