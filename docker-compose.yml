@@ -10,12 +10,16 @@ services:
     ports:
       - "${HOST_PORT:-8000}:8000"
 
-    # Environment variables
+    # Load all environment variables from .env file
+    env_file:
+      - .env
+
+    # Environment variables (these override .env)
     environment:
       - PORT=8000
       - WORKERS=1
       - LOG_LEVEL=info
-      - AUTH_TOKENS_FILE=/data/tokens.json
+      - AUTH_TOKENS_FILE=/app/tokens.json
       # Storage configuration (set in .env to enable)
       - STORAGE_CONFIG=${STORAGE_CONFIG:+/app/storage.yaml}
       - STORAGE_NAME=${STORAGE_NAME}
@@ -23,7 +27,7 @@ services:
     # Volume mounts
     volumes:
       # Tokens
-      - ${TOKENS_FILE:-./tokens.json}:/data/tokens.json:ro
+      - ${TOKENS_FILE:-./tokens.json}:/app/tokens.json:ro
       # Storage config (mounted if STORAGE_CONFIG is set in .env)
       - ${STORAGE_CONFIG:-/dev/null}:/app/storage.yaml:ro
       # Storage data (for filesystem-based stores)

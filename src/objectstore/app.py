@@ -57,8 +57,8 @@ async def lifespan(app):
         from storage.config_builder import StoreFactory
 
         factory = StoreFactory(storage_config)
-        store_name = os.getenv('STORAGE_NAME', None)
-        store = factory.create(store_name)
+        store_name = os.getenv('STORAGE_NAME') or None
+        store = factory.build(store_name) if store_name else factory.build()
 
         # Handle context managers (both sync and async)
         if hasattr(store, '__aenter__'):

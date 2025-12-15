@@ -32,13 +32,8 @@ RUN pip install --no-cache-dir .
 RUN apt-get purge -y --auto-remove git && \
     rm -rf /var/lib/apt/lists/*
 
-# Create non-root user and data directory
-RUN useradd -m -u 1000 -s /bin/bash appuser && \
-    mkdir -p /data && \
-    chown -R appuser:appuser /app /data
-
-# Switch to non-root user
-USER appuser
+# Create data directory
+RUN mkdir -p /data
 
 # Expose port
 EXPOSE 8000
