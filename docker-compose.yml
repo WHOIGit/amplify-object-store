@@ -16,20 +16,18 @@ services:
       - WORKERS=1
       - LOG_LEVEL=info
       - AUTH_TOKENS_FILE=/data/tokens.json
+      # Storage configuration (set in .env to enable)
+      - STORAGE_CONFIG=${STORAGE_CONFIG:+/app/storage.yaml}
+      - STORAGE_NAME=${STORAGE_NAME}
 
     # Volume mounts
     volumes:
-      # Mount tokens.json from host
-      # IMPORTANT: Create tokens.json on host before running
+      # Tokens
       - ${TOKENS_FILE:-./tokens.json}:/data/tokens.json:ro
+      # Storage config (mounted if STORAGE_CONFIG is set in .env)
+      - ${STORAGE_CONFIG:-/dev/null}:/app/storage.yaml:ro
+      # Storage data (for filesystem-based stores)
+      - ${STORAGE_PATH:-./data}:/data/objects
 
     # Restart policy
     restart: unless-stopped
-
-    # Health check
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read()"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 10s

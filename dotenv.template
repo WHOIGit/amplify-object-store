@@ -15,3 +15,17 @@ HOST_PORT=8000
 
 # Path to tokens.json file on the host
 TOKENS_FILE=./tokens.json
+
+# ============================================================================
+# Storage Backend
+# ============================================================================
+
+# Path to storage config YAML on the host (optional)
+# Leave empty or comment out to use in-memory store (demo mode)
+# STORAGE_CONFIG=./storage.yaml
+
+# Name of store to use from config (if multiple stores defined)
+# STORAGE_NAME=filesystem
+
+# Path to data directory for filesystem-based stores
+STORAGE_PATH=./data

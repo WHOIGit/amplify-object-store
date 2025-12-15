@@ -102,25 +102,37 @@ uvicorn objectstore.app:app --host 0.0.0.0 --port 8000
 
 ## Docker Deployment
 
-### Prerequisites
-
-1. Docker and Docker Compose installed
-2. A `tokens.json` file with API tokens (see Token Management section below)
-3. Optional: A `.env` file for custom configuration (see Configuration section below)
-
-### Build and Run with Docker Compose
+### Default Deployment
 
 ```bash
-# Optional: Create .env file for custom configuration
+# Create tokens
+python -m objectstore.auth_tokens add api-user --ttl 365 --scope read --scope write --scope delete
+
+# Start service (uses in-memory store - data not persisted)
+docker compose up -d
+
+# Test it
+curl http://localhost:8000/health
+```
+
+### Custom Object Store Deployment
+
+Configure a storage backend for persistent data:
+
+```bash
+# 1. Create storage config
+cp storage.yaml.template storage.yaml
+# Edit storage.yaml to configure filesystem, S3, or other backend
+
+# 2. Create .env and set storage config
 cp dotenv.template .env
-# Edit .env to customize ports, workers, etc.
+# Uncomment STORAGE_CONFIG=./storage.yaml in .env
 
-# Build the image
-docker compose build
-
-# Start the service
+# 3. Start service
 docker compose up -d
 ```
+
+**Port configuration:** Set `HOST_PORT` in `.env` file (copy from `dotenv.template`)
 
 ## Running Tests
 
