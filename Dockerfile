@@ -18,15 +18,12 @@ RUN apt-get update && \
 # Set working directory
 WORKDIR /app
 
-# Copy dependency files and README (needed for package build)
+# Copy dependency files and source code
 COPY pyproject.toml README.md ./
-RUN pip install --no-cache-dir .[deploy]
-
-# Copy application code
 COPY src/ ./src/
 
-# Install the package
-RUN pip install --no-cache-dir .
+# Install the package with deploy extras
+RUN pip install --no-cache-dir .[deploy]
 
 # Remove git now that dependencies are installed
 RUN apt-get purge -y --auto-remove git && \
