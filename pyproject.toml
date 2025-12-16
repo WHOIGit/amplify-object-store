@@ -17,7 +17,7 @@ keywords = ['storage']
 dependencies = [
     "fastapi>=0.124.2", 
     "requests>=2.32.5", 
-    "amplify-storage-utils @ git+https://github.com/WHOIGit/amplify-storage-utils@v1.2.0"
+    "amplify-storage-utils @ git+https://github.com/WHOIGit/amplify-storage-utils@v1.4.0"
 ]
 [project.optional-dependencies]
 test = [
