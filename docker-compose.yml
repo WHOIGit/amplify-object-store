@@ -30,7 +30,7 @@ services:
       # - ${STORAGE_CONFIG}:/app/storage.yaml:ro
 
       # Optional: Uncomment for filesystem-based storage
-      # - ${HOST_STORAGE_PATH}:/data/objects
+      # - ${HOST_STORAGE_PATH}:/data
 
     # Restart policy
     restart: unless-stopped

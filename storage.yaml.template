@@ -4,12 +4,10 @@
 #
 # This uses amplify-storage-utils config_builder to instantiate storage backends.
 # See: https://github.com/WHOIGit/amplify-storage-utils
-
-# ==============================================================================
-# Example 1: Async Filesystem Storage (persistent local storage)
-# ==============================================================================
 stores:
   filesystem:
     type: AsyncFilesystemStore
     config:
-      root_path: /data/objects
+      root_path: /data # Container path -- do not change
+
+main: filesystem
