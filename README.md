@@ -170,12 +170,6 @@ docker compose up -d
 
 **Use case:** AWS S3, MinIO, or other S3-compatible object storage
 
-**Note:** S3 storage requires additional dependencies. Before deploying, modify `pyproject.toml`:
-```python
-"amplify-storage-utils[s3] @ git+https://github.com/WHOIGit/amplify-storage-utils@v1.4.1"
-```
-Then rebuild the Docker image.
-
 **Configuration:**
 
 1. Create an S3 storage config file `storage.yaml`:
