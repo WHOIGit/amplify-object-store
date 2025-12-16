@@ -16,6 +16,13 @@ services:
 
     # Container environment variables (these override .env)
     environment:
+      # Application settings
+      - AUTH_TOKENS_FILE=/app/tokens.json
+      - HOST=0.0.0.0
+      - PORT=8000
+      - WORKERS=${WORKERS:-1}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+
       # Storage configuration (set in .env to enable)
       # NOTE: Uncomment STORAGE_CONFIG volume mount below in this file to enable.
       - STORAGE_CONFIG=${STORAGE_CONFIG:+/app/storage.yaml}
@@ -27,10 +34,10 @@ services:
       - ${TOKENS_FILE:-./tokens.json}:/app/tokens.json:ro
 
       # Optional: Uncomment for YAML-based storage config (S3, etc.)
-      # - ${STORAGE_CONFIG}:/app/storage.yaml:ro
+      - ${STORAGE_CONFIG}:/app/storage.yaml:ro
 
       # Optional: Uncomment for filesystem-based storage
-      # - ${HOST_STORAGE_PATH}:/data
+      - ${HOST_STORAGE_PATH}:/data
 
     # Restart policy
     restart: unless-stopped

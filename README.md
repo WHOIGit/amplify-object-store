@@ -102,61 +102,148 @@ uvicorn objectstore.app:app --host 0.0.0.0 --port 8000
 
 ## Docker Deployment
 
-### Default Deployment
+### Step 1: Create Authentication Tokens
 
 ```bash
-# Create tokens
 python -m objectstore.auth_tokens add api-user --ttl 365 --scope read --scope write --scope delete
-
-# Start service (uses in-memory store - data not persisted)
-docker compose up -d
-
-# Test it
-curl http://localhost:8000/health
 ```
 
-### Custom Object Store Deployment
+This creates a `tokens.json` file with your API credentials.
 
-Configure a storage backend for persistent data:
+### Step 2: Configure Environment
+
+Create a `.env` file from the template:
 
 ```bash
-# 1. Create storage config
-cp storage.yaml.template storage.yaml
-# Edit storage.yaml to configure filesystem, S3, or other backend
-
-# 2. Create .env and set storage config
 cp dotenv.template .env
-# Uncomment STORAGE_CONFIG=./storage.yaml in .env
+```
 
-# 3. Start service
+Edit `.env` based on your storage backend choice (see below).
+
+### Step 3: Choose Your Storage Backend
+
+#### Option A: In-Memory Storage (Testing Only)
+
+**Use case:** Quick testing, data is NOT persisted
+
+**Configuration:**
+- Leave `STORAGE_CONFIG` commented out in `.env`
+- No changes needed to `docker-compose.yml`
+
+```bash
 docker compose up -d
 ```
 
-**Port configuration:** Set `HOST_PORT` in `.env` file (copy from `dotenv.template`)
+#### Option B: Filesystem Storage
+
+**Use case:** Persistent local file storage
+
+**Configuration:**
+
+1. In `.env`, uncomment and set:
+   ```bash
+   STORAGE_CONFIG=./storage.yaml
+   HOST_STORAGE_PATH=./data
+   ```
+
+2. In `docker-compose.yml`, uncomment both volume mounts:
+   ```yaml
+   # Optional: Uncomment for YAML-based storage config (S3, etc.)
+   - ${STORAGE_CONFIG}:/app/storage.yaml:ro
+
+   # Optional: Uncomment for filesystem-based storage
+   - ${HOST_STORAGE_PATH}:/data
+   ```
+
+3. Create storage config:
+   ```bash
+   cp storage.yaml.template storage.yaml
+   ```
+   The default config uses `AsyncFilesystemStore` with `/data` as the root path.
+
+4. Start the service:
+   ```bash
+   docker compose up -d
+   ```
+
+#### Option C: S3-Compatible Storage
+
+**Use case:** AWS S3, MinIO, or other S3-compatible object storage
+
+**Note:** S3 storage requires additional dependencies. Before deploying, modify `pyproject.toml`:
+```python
+"amplify-storage-utils[s3] @ git+https://github.com/WHOIGit/amplify-storage-utils@v1.4.1"
+```
+Then rebuild the Docker image.
+
+**Configuration:**
+
+1. Create an S3 storage config file `storage.yaml`:
+   ```yaml
+   stores:
+     s3:
+       type: AsyncBucketStore
+       config:
+         bucket_name: ${S3_BUCKET}
+         endpoint_url: ${S3_ENDPOINT}
+         s3_access_key: ${S3_ACCESS_KEY}
+         s3_secret_key: ${S3_SECRET_KEY}
+
+   main: s3
+   ```
+
+2. In `.env`, set:
+   ```bash
+   STORAGE_CONFIG=./storage.yaml
+
+   # S3 credentials (adjust as needed)
+   S3_BUCKET=your-bucket-name
+   S3_ENDPOINT=https://s3.amazonaws.com
+   S3_ACCESS_KEY=your-access-key
+   S3_SECRET_KEY=your-secret-key
+   ```
+
+3. In `docker-compose.yml`, uncomment the storage config volume mount:
+   ```yaml
+   # Optional: Uncomment for YAML-based storage config (S3, etc.)
+   - ${STORAGE_CONFIG}:/app/storage.yaml:ro
+   ```
+
+4. Start the service:
+   ```bash
+   docker compose up -d
+   ```
+
+#### Custom Storage Backends
+
+You can use any storage backend provided by [amplify-storage-utils](https://github.com/WHOIGit/amplify-storage-utils) by creating a `storage.yaml` file with the appropriate configuration. See the amplify-storage-utils documentation for available store types and their configuration options. All stores follow the same YAML format shown in the examples above.
+
+### Verifying Deployment
+
+```bash
+# Check service health
+curl http://localhost:8000/health
+
+# Check logs
+docker compose logs -f object-store
+```
 
 ## Environment Variables
 
 Environment variables can be configured in the `.env` file (copy from `dotenv.template`).
 
-### External Variables (Host-side)
+### Host-Side Variables
 
-These configure host paths and ports:
+- `HOST_PORT` - Port exposed on host (default: 8000)
+- `TOKENS_FILE` - Path to tokens.json on host (default: ./tokens.json)
+- `STORAGE_CONFIG` - Path to storage YAML on host (optional, requires volume mount)
+- `HOST_STORAGE_PATH` - Path to data directory on host for filesystem storage (optional, requires volume mount)
 
-- `HOST_PORT` - Port to expose on the host machine (default: 8000)
-- `TOKENS_FILE` - Path to tokens.json file on the host (default: ./tokens.json)
-- `STORAGE_CONFIG` - Path to storage.yaml config file on the host (optional, uncomment volume mount in docker-compose.yml)
-- `HOST_STORAGE_PATH` - Path to data directory on the host for filesystem storage (optional, uncomment volume mount in docker-compose.yml)
+### Container-Side Variables
 
-### Internal Variables (Container-side)
-
-These control application behavior inside the container (defaults set in Dockerfile, can be overridden in .env):
-
-- `PORT` - Internal container port (default: 8000)
-- `HOST` - Bind address inside container (default: 0.0.0.0)
 - `WORKERS` - Number of uvicorn workers (default: 1)
 - `LOG_LEVEL` - Logging level: debug, info, warning, error (default: info)
-- `AUTH_TOKENS_FILE` - Path to tokens file inside container (default: /app/tokens.json)
-- `STORAGE_NAME` - Name of storage backend from config when multiple stores are defined (optional)
+- `STORAGE_NAME` - Specific store name from config when multiple stores are defined (optional)
 
 ## Running Tests
 

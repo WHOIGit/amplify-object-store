@@ -1,14 +1,5 @@
 FROM python:3.12-slim
 
-# Set environment variables
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    AUTH_TOKENS_FILE=/app/tokens.json \
-    HOST=0.0.0.0 \
-    PORT=8000 \
-    WORKERS=1 \
-    LOG_LEVEL=info
-
 # Install git temporarily for GitHub dependency, then install packages and clean up
 RUN apt-get update && \
     apt-get install -y --no-install-recommends git && \

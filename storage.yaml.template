@@ -6,7 +6,7 @@
 # See: https://github.com/WHOIGit/amplify-storage-utils
 stores:
   filesystem:
-    type: AsyncFilesystemStore
+    type: AsyncSafeFilesystemStore
     config:
       root_path: /data # Container path -- do not change
 

@@ -1,5 +1,5 @@
 fastapi
-git+https://github.com/WHOIGit/amplify-storage-utils@v1.2.0
+git+https://github.com/WHOIGit/amplify-storage-utils@v1.4.1
 requests
 uvicorn
 pytest
