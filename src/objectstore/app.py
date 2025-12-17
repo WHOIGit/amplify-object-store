@@ -6,8 +6,9 @@ import base64
 import time
 from datetime import datetime, timezone
 import json
+import os
 from contextlib import asynccontextmanager
-
+from pathlib import Path
 
 from .auth_fastapi import scoped_get, scoped_head, scoped_put, scoped_delete
 
@@ -40,13 +41,75 @@ class AsyncDictStore:
 
 @asynccontextmanager
 async def lifespan(app):
-    # This is where you would initialize your object store
-    # Example:
-    app.state.store = AsyncDictStore()
+    """
+    Initialize the object store from configuration.
+
+    If STORAGE_CONFIG environment variable is set, load store from YAML config.
+    Otherwise, use in-memory AsyncDictStore (demo mode).
+    """
+    storage_config = os.getenv('STORAGE_CONFIG')
+
+    if storage_config:
+        # Storage config provided - must load successfully or fail
+        if not Path(storage_config).exists():
+            raise FileNotFoundError(f"STORAGE_CONFIG={storage_config} does not exist")
+
+        from storage.config_builder import StoreFactory
+
+        factory = StoreFactory(storage_config)
+        store_name = os.getenv('STORAGE_NAME') or None
+        store = factory.build(store_name) if store_name else factory.build()
+
+        # Handle context managers (both sync and async)
+        if hasattr(store, '__aenter__'):
+            # Async context manager (e.g., AsyncBucketStore)
+            app.state.store = await store.__aenter__()
+            app.state._store_context = store
+            app.state._is_async_cm = True
+        elif hasattr(store, '__enter__'):
+            # Sync context manager (e.g., SqliteStore, ZipStore)
+            app.state.store = store.__enter__()
+            app.state._store_context = store
+            app.state._is_async_cm = False
+        else:
+            # Simple store (e.g., FilesystemStore)
+            app.state.store = store
+            app.state._store_context = None
+            app.state._is_async_cm = False
+
+        print(f"Loaded storage backend from {storage_config}")
+    else:
+        # No config provided - use in-memory store (demo mode)
+        print("WARNING: Using in-memory AsyncDictStore (demo mode - data will not persist)")
+        print("Set STORAGE_CONFIG environment variable to use persistent storage")
+        app.state.store = AsyncDictStore()
+        app.state._store_context = None
+        app.state._is_async_cm = False
+
     yield
-    # This is where you would clean up your object store if needed
+
+    # Cleanup: exit context manager if needed
+    if app.state._store_context is not None:
+        if app.state._is_async_cm:
+            await app.state._store_context.__aexit__(None, None, None)
+        else:
+            app.state._store_context.__exit__(None, None, None)
 
 app = FastAPI(title="Object Store API", lifespan=lifespan)
+
+
+@app.get("/health", tags=["Health"])
+async def health_check():
+    """
+    Health check endpoint for container orchestration.
+    Returns service status without requiring authentication.
+    """
+    return {
+        "status": "healthy",
+        "service": "amplify-object-store",
+        "version": "0.1.0"
+    }
+
 
 # Pydantic models for responses
 class ObjectMetadata(BaseModel):

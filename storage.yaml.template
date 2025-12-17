@@ -1,0 +1,13 @@
+# Storage Backend Configuration Template
+# Copy this file to storage.yaml and configure your storage backend:
+#   cp storage.yaml.template storage.yaml
+#
+# This uses amplify-storage-utils config_builder to instantiate storage backends.
+# See: https://github.com/WHOIGit/amplify-storage-utils
+stores:
+  filesystem:
+    type: AsyncSafeFilesystemStore
+    config:
+      root_path: /data # Container path -- do not change
+
+main: filesystem

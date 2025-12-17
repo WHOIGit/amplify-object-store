@@ -1,0 +1,32 @@
+# Docker Compose Configuration Template
+# Copy this file to .env and adjust values as needed:
+#   cp dotenv.template .env
+
+# ============================================================================
+# Server Configuration
+# ============================================================================
+
+# Port to expose on the host machine
+HOST_PORT=8000
+
+# ============================================================================
+# Authentication
+# ============================================================================
+
+# Path to tokens.json file on the host
+TOKENS_FILE=./tokens.json
+
+# ============================================================================
+# Storage Backend
+# ============================================================================
+
+# Path to storage config YAML on the host (optional)
+# To enable: uncomment this line AND the STORAGE_CONFIG volume mount in docker-compose.yml
+# STORAGE_CONFIG=./storage.yaml
+
+# Name of store to use from config (if multiple stores defined)
+# STORAGE_NAME=filesystem
+
+# Path to data directory for filesystem-based stores (host side)
+# To enable: uncomment this line AND the HOST_STORAGE_PATH volume mount in docker-compose.yml
+# HOST_STORAGE_PATH=./data
