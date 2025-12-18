@@ -105,7 +105,7 @@ uvicorn objectstore.app:app --host 0.0.0.0 --port 8000
 ### Step 1: Create Authentication Tokens
 
 ```bash
-python -m objectstore.auth_tokens add api-user --ttl 365 --scope read --scope write --scope delete
+authtoken add api-user --ttl 365 --scope read --scope write --scope delete
 ```
 
 This creates a `tokens.json` file with your API credentials.

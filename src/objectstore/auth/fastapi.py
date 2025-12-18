@@ -11,7 +11,7 @@ from typing import List, Optional
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from .auth_tokens import (
+from .tokens import (
     TokenRecord,
     DEFAULT_TOKENS_FILE,
     hash_token,
