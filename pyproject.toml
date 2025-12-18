@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "amplify-object-store"
-version = "0.1.0"
+version = "0.2.0"
 description = "Object storage REST API"
 readme = "README.md"
 authors = [{name = "Joe Futrelle", email = "jfutrelle@whoi.edu"}]
