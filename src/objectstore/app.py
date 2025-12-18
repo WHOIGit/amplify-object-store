@@ -10,7 +10,7 @@ import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from .auth_fastapi import scoped_get, scoped_head, scoped_put, scoped_delete
+from objectstore.auth.fastapi import scoped_get, scoped_head, scoped_put, scoped_delete
 
 
 class AsyncDictStore:
